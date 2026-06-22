@@ -1,0 +1,174 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>家計簿</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- 固定エリア：ここに入力フォームと「削除ボタン付きの履歴」をまとめます -->
+        <div class="sticky-top">
+                    <!-- グラフ表示エリア -->
+        <div style="width: 100%; height: 300px; margin: 20px 0;">
+            <canvas id="mixedChart"></canvas>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const ctx = document.getElementById('mixedChart').getContext('2d');
+            new Chart(ctx, {
+                data: {
+                    labels: {{ graph_days|safe }},
+                    datasets: [
+                        {
+                            type: 'line', // 収入は折れ線
+                            label: '収入',
+                            data: {{ graph_income|safe }},
+                            borderColor: '#00ba7c',
+                            backgroundColor: 'rgba(0, 186, 124, 0.2)',
+                            tension: 0.3, // 線を少し丸める
+                            fill: true
+                        },
+                        {
+                            type: 'bar', // 支出は棒グラフ
+                            label: '支出',
+                            data: {{ graph_expense|safe }},
+                            backgroundColor: '#f91880',
+                            borderRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: 100000,
+                            ticks: { color: '#8899a6',
+                                callback: function(value) {
+                                    return '¥' + value.toLocaleString();
+                                }
+                        },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#8899a6' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    }
+                }
+            });
+        </script>
+
+            <div class="header">
+                <h2 style="margin: 0;">家計簿</h2>
+                <select onchange="location.href='/?year=' + this.value.split('-')[0] + '&month=' + this.value.split('-')[1]"
+                        style="background: #1d9bf0; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 15px; padding: 5px 10px;">
+                    {% for m in month_list %}
+                        <option value="{{ m.y }}-{{ m.m }}" {% if m.y == current_year and m.m == current_month %}selected{% endif %}>
+                            {{ m.y }}年{{ m.m }}月
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="total-box">
+                <div class="total-item">
+                    <span class="label">収入</span>
+                    <span class="amt-in">¥{{ total_in|intcomma }}</span>
+                </div>
+                <div class="total-item">
+                    <span class="label">支出</span>
+                    <span class="amt-out">¥{{ total_out|intcomma }}</span>
+                </div>
+                <div class="total-item">
+                    <span class="label">残高</span>
+                    <span class="amt-balance">¥{{ balance|intcomma }}</span>
+                </div>
+            </div>
+
+            {% if balance < 5000 %}
+            <div class="alert-bar">
+                ⚠️ 残高が5,000円を切りました！節約しましょう！
+            </div>
+            {% endif %}
+
+            <div class="input-section">
+                <form method="POST" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    {% csrf_token %}
+                    <input type="text" name="title" placeholder="内容" required style="flex: 2; min-width: 120px;">
+                    <input type="number" name="amount" placeholder="金額" required style="flex: 1; min-width: 80px;">
+                    <select name="balance_type" style="background: #1d9bf0; font-weight: bold; color: white;">
+                        <option value="out">支出</option>
+                        <option value="in">収入</option>
+                    </select>
+                    <select name="category">
+                        <option value="食費">食費</option>
+                        <option value="日用品">日用品</option>
+                        <option value="娯楽">娯楽</option>
+                        <option value="その他">その他</option>
+                    </select>
+                    <select name="payment_method">
+                        <option value="現金">現金</option>
+                        <option value="カード">カード</option>
+                        <option value="電子マネー">電子マネー</option>
+                    </select>
+                    <button type="submit" class="record-btn">記録</button>
+                </form>
+            </div>
+
+            <!-- ★ここに「削除ボタン付き」の履歴リストを引っ越しさせました！ -->
+            <div class="history-list" style="max-height: 50vh; overflow-y: auto;">
+                {% for report in expenses %}
+                    <div class="post" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div class="date">{{ report.date|date:"Y/m/d" }}</div>
+                            <div class="category">#{{ report.category }} [{{ report.payment_method }}]</div>
+                            <div class="content">{{ report.title }}</div>
+                            
+                            {% if report.balance_type == "in" %}
+                                <div class="amt-in">+¥{{ report.amount|intcomma }}</div>
+                            {% else %}
+                                <div class="amt-out">-¥{{ report.amount|intcomma }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 削除ボタン -->
+                        <form action="{% url 'delete' report.id %}" method="POST" onsubmit="return confirm('削除しますか？')">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none; border:none; color:#8899a6; cursor:pointer; font-size:1.5em; padding: 10px;">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p>データがありません。</p>
+                {% endfor %}
+            </div>
+        </div> <!-- /sticky-top 終わり -->
+    </div>
+
+    <button id="back-to-top" class="top-btn">↑</button>
+
+    <script>
+        const topBtn = document.getElementById("back-to-top");
+        window.onscroll = function() {
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                topBtn.style.display = "block";
+            } else {
+                topBtn.style.display = "none";
+            }
+        };
+        topBtn.onclick = function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+    </script>
+</body>
+</html>

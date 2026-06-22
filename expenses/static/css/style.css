@@ -1,0 +1,126 @@
+/* style.css */
+
+/* ドットを消しました。これで画面全体が暗紺色になります */
+body {
+    background-color: #15202b; 
+    color: white; 
+    font-family: sans-serif; 
+    margin: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    border-left: 1px solid #38444d;
+    border-right: 1px solid #38444d;
+    min-height: 100vh;
+}
+
+/* 固定したいエリア全体の箱 */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #15202b; 
+    border-bottom: 2px solid #38444d;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+}
+
+.total-box {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid #38444d;
+    border-bottom: 1px solid #38444d;
+    text-align: center;
+}
+
+/* style.css に追加 */
+.top-btn {
+    display: none; /* 最初は隠しておく */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    background-color: #1d9bf0;
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.top-btn:hover {
+    background-color: #1a8cd8;
+}
+
+.total-item {
+    flex: 1;
+}
+
+.alert-bar {
+    background-color: #ffad1f;
+    color: black;
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.input-section {
+    padding: 15px;
+    background-color: #15202b;
+}
+
+/* 入力パーツの見た目 */
+select, input {
+    background: #15202b;
+    border: 1px solid #38444d;
+    color: white;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+/* 記録ボタンのデザイン（抜けていたので追加） */
+.record-btn {
+    background-color: #1d9bf0;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 履歴リスト */
+.history-list {
+    padding-top: 10px;
+}
+
+.post {
+    padding: 15px;
+    border-bottom: 1px solid #38444d;
+    transition: 0.2s;
+}
+
+.post:hover {
+    background-color: #1c2732;
+}
+
+/* 履歴の中の各パーツ */
+.label { color: #8899a6; font-size: 0.8em; display: block; margin-bottom: 5px; }
+.category { color: #1d9bf0; font-size: 0.9em; font-weight: bold; }
+.content { font-size: 1.1em; margin: 5px 0; }
+.amt-in { color: #00ba7c; font-weight: bold; font-size: 1.2em; }
+.amt-out { color: #ffad1f; font-weight: bold; font-size: 1.2em; }
+.amt-balance { color: #1d9bf0; font-weight: bold; font-size: 1.2em; }
+.date { color: #8899a6; font-size: 0.8em; }
